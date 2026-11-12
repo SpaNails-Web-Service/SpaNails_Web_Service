@@ -1,8 +1,8 @@
 from typing import List
 from fastapi import HTTPException, status
 
-from domain.models import Product, ProductCreate
-from repository.product_repo import ProductRepository
+from app.domain.product_models import Product, ProductCreate
+from app.repositories.product_repo import ProductRepository
 
 
 class ProductService:

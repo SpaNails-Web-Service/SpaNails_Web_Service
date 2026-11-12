@@ -1,5 +1,5 @@
 from typing import Optional, List
-from domain.models import Product, ProductCreate
+from app.domain.product_models import Product, ProductCreate
 
 
 class ProductRepository:

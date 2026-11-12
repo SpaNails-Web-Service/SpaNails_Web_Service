@@ -1,9 +1,9 @@
 from typing import List
 from fastapi import APIRouter, status
 
-from domain.models import Product, ProductCreate
-from service.product_service import ProductService
-from repository.product_repo import ProductRepository
+from app.domain.product_models import Product, ProductCreate
+from app.services.product_service import ProductService
+from app.repositories.product_repo import ProductRepository
 
 
 # Instancias (en producción usarías DI de FastAPI)
