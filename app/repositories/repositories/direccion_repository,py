@@ -1,0 +1,18 @@
+from sqlalchemy.orm import Session
+from app.domain.models.direccion_model import Direccion
+
+class DireccionRepository:
+    def check_municipio_exists(self, db: Session, municipio_id: int) -> bool:
+        # Simulamos que el municipio 0 no existe
+        if municipio_id == 0:
+            return False
+        return True 
+
+    def save(self, db: Session, direccion_data: dict) -> Direccion:
+        nueva_direccion = Direccion(**direccion_data)
+        db.add(nueva_direccion)
+        db.commit()
+        db.refresh(nueva_direccion)
+        return nueva_direccion
+
+direccion_repository = DireccionRepository()
