@@ -7,3 +7,4 @@ class Servicio:
     precio: float
     duracion_minutos: int
     estado: str
+    aplica_domicilio: bool = False

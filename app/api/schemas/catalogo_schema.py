@@ -1,12 +1,11 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional
+from typing import Optional, List
 
+# --- ESQUEMAS HU-026: Crear Servicio ---
 class ServicioCreate(BaseModel):
     nombre: str = Field(..., min_length=2, example="Uñas Acrílicas Premium")
     precio: float = Field(..., example=50000.0)
     duracion_minutos: int = Field(..., example=60)
-    # Si incluyeras categoría en un futuro:
-    # categoria: str = Field(default="manicura", example="manicura")
 
     @field_validator('precio')
     @classmethod
@@ -31,4 +30,18 @@ class ServicioResponse(BaseModel):
     message: Optional[str] = None
     mensaje: Optional[str] = None
     data: Optional[ServicioDataResponse]
+    success: bool
+
+# --- ESQUEMAS HU-029: Consultar Catálogo ---
+class ServicioCatalogoItem(BaseModel):
+    id_servicio: int
+    nombre: str
+    precio: float
+    duracion_minutos: int
+    aplica_domicilio: bool
+
+class CatalogoResponse(BaseModel):
+    message: Optional[str] = None
+    mensaje: Optional[str] = None
+    data: Optional[List[ServicioCatalogoItem]]
     success: bool
