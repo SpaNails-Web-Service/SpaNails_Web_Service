@@ -4,9 +4,8 @@ from typing import Optional, List
 class CatalogoRepository:
     _instance = None
     
-    # Pre-cargamos servicios para probar el GET (HU-029)
     _db: List[Servicio] = [
-        Servicio(id_servicio=10, nombre="Manicura Semipermanente", precio=45000.0, duracion_minutos=60, estado="Activo", aplica_domicilio=True),
+        Servicio(id_servicio=10, nombre="Manicura Semipermanente", precio=45000.0, duracion_minutos=60, estado="Activo", aplica_domicilio=False),
         Servicio(id_servicio=11, nombre="Pedicura Spa", precio=35000.0, duracion_minutos=45, estado="Inactivo", aplica_domicilio=False)
     ]
     _current_id: int = 40 
@@ -29,7 +28,21 @@ class CatalogoRepository:
         return servicio
 
     def get_servicios_activos(self) -> List[Servicio]:
-        # HU-029: Retorna únicamente los servicios con estado Activo
         return [s for s in self._db if s.estado == "Activo"]
+
+    # --- HU-031: Habilitar Domicilio ---
+    def find_servicio_by_id(self, id_servicio: int) -> Optional[Servicio]:
+        """Busca un servicio por su ID."""
+        for servicio in self._db:
+            if servicio.id_servicio == id_servicio:
+                return servicio
+        return None
+
+    def update_modalidad(self, id_servicio: int, aplica_domicilio: bool) -> Servicio:
+        """Actualiza la bandera de domicilio del servicio."""
+        servicio = self.find_servicio_by_id(id_servicio)
+        if servicio:
+            servicio.aplica_domicilio = aplica_domicilio
+        return servicio
 
 catalogo_repository = CatalogoRepository()

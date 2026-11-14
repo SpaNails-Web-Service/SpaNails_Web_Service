@@ -45,3 +45,17 @@ class CatalogoResponse(BaseModel):
     mensaje: Optional[str] = None
     data: Optional[List[ServicioCatalogoItem]]
     success: bool
+
+# --- ESQUEMAS HU-031: Habilitar Domicilio ---
+class ModalidadUpdate(BaseModel):
+    aplica_domicilio: bool = Field(..., example=True)
+
+class ModalidadDataResponse(BaseModel):
+    id_servicio: int
+    aplica_domicilio: bool
+
+class ModalidadResponse(BaseModel):
+    message: Optional[str] = None
+    mensaje: Optional[str] = None
+    data: Optional[ModalidadDataResponse]
+    success: bool
