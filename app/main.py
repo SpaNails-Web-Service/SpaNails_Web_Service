@@ -3,7 +3,8 @@ from fastapi import FastAPI
 from app.api.routers import cliente_router
 from app.api.routers import admin_router
 from app.api.routers import auth_router
-from app.api.routers import catalogo_router  # <-- AGREGADO: Importación del router de Catálogo (HU-026)
+from app.api.routers import catalogo_router
+from app.api.routers import zona_router  # <-- AGREGADO: Importación del router de Zonas (HU-036)
 from app.api.router import router as products_router
 from app.api.parametrics_router import router as parametrics_router
 
@@ -16,7 +17,8 @@ app = FastAPI(
 app.include_router(cliente_router.router)
 app.include_router(admin_router.router)
 app.include_router(auth_router.router)
-app.include_router(catalogo_router.router)   # <-- AGREGADO: Registro del router de Catálogo (HU-026)
+app.include_router(catalogo_router.router)
+app.include_router(zona_router.router)   # <-- AGREGADO: Registro del router de Zonas (HU-036)
 app.include_router(products_router)
 app.include_router(parametrics_router)
 
