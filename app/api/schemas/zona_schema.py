@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 
+# --- ESQUEMAS HU-036: Crear Zona ---
 class ZonaCreate(BaseModel):
     nombre_zona: str = Field(..., example="Cabecera")
 
@@ -20,4 +21,16 @@ class ZonaResponse(BaseModel):
     message: Optional[str] = None
     mensaje: Optional[str] = None
     data: Optional[ZonaDataResponse]
+    success: bool
+
+# --- ESQUEMAS HU-038: Comprobar Cobertura ---
+class CoberturaDataResponse(BaseModel):
+    cobertura_disponible: bool
+    id_zona: Optional[int] = None
+    nombre_zona: Optional[str] = None
+
+class CoberturaResponse(BaseModel):
+    message: Optional[str] = None
+    mensaje: Optional[str] = None
+    data: CoberturaDataResponse
     success: bool
