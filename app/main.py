@@ -9,6 +9,7 @@ from app.api.routers import catalogo_router
 from app.api.routers import zona_router  # <-- AGREGADO: Importación del router de Zonas (HU-036)
 from app.api.routers import logistica_router
 from app.api.routers import citas_router
+from app.api.routers import agenda_router
 from app.api.router import router as products_router
 from app.api.parametrics_router import router as parametrics_router
 from app.api.endpoints.direccion import router as direccion_router
@@ -26,6 +27,7 @@ app.include_router(catalogo_router.router)
 app.include_router(zona_router.router)   # <-- AGREGADO: Registro del router de Zonas (HU-036)
 app.include_router(logistica_router.router)
 app.include_router(citas_router.router)
+app.include_router(agenda_router.router)
 app.include_router(direccion_router)
 app.include_router(products_router)
 app.include_router(parametrics_router)
