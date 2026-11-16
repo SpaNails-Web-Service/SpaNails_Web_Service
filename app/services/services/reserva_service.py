@@ -50,6 +50,14 @@ class EstadoReservaNoConfirmableError(Exception):
     pass
 
 
+class ReservaNoAutorizadaError(Exception):
+    pass
+
+
+class EstadoReservaNoCancelableError(Exception):
+    pass
+
+
 class ReservaService:
     def __init__(self):
         # Serializa el check + insert dentro de este proceso para evitar carreras locales.
@@ -166,6 +174,34 @@ class ReservaService:
         db.commit()
         db.refresh(reserva)
         return reserva
+
+    def cancelar(self, db: Session, id_reserva: int, cliente_id: int) -> tuple[Reserva, bool]:
+        with self._lock:
+            reserva = reserva_repository.obtener_por_id(db, id_reserva)
+            if reserva is None:
+                raise ReservaNoEncontradaError("Reserva no encontrada")
+            if reserva.cliente_id != cliente_id:
+                raise ReservaNoAutorizadaError(
+                    "No tiene permisos para modificar esta reserva"
+                )
+
+            estado_actual = (reserva.estado or "").strip().casefold()
+            inicio = datetime.combine(
+                reserva.fecha,
+                datetime.strptime(reserva.hora_inicio, "%H:%M").time(),
+                tzinfo=ZONA_HORARIA_NEGOCIO,
+            )
+            ahora = datetime.now(ZONA_HORARIA_NEGOCIO)
+            if estado_actual not in {"pendiente", "confirmada"} or inicio <= ahora:
+                raise EstadoReservaNoCancelableError(
+                    "La cita seleccionada no puede ser anulada en su estado actual"
+                )
+
+            penalidad = inicio - ahora < timedelta(hours=24)
+            reserva.estado = "Cancelada"
+            db.commit()
+            db.refresh(reserva)
+            return reserva, penalidad
 
 
 reserva_service = ReservaService()
