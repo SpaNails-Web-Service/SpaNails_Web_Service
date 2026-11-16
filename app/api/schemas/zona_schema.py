@@ -4,6 +4,7 @@ from typing import Optional
 # --- ESQUEMAS HU-036: Crear Zona ---
 class ZonaCreate(BaseModel):
     nombre_zona: str = Field(..., example="Cabecera")
+    tarifa_domicilio: Optional[int] = Field(default=None, ge=0, example=8000)
 
     @field_validator('nombre_zona')
     @classmethod
@@ -16,6 +17,7 @@ class ZonaDataResponse(BaseModel):
     id_zona: int
     nombre_zona: str
     estado: str
+    tarifa_domicilio: Optional[int] = None
 
 class ZonaResponse(BaseModel):
     message: Optional[str] = None

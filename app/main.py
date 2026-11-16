@@ -1,12 +1,16 @@
 from fastapi import FastAPI
+from database import engine
+from app.domain.models.direccion_model import Direccion
 
 from app.api.routers import cliente_router
 from app.api.routers import admin_router
 from app.api.routers import auth_router
 from app.api.routers import catalogo_router
 from app.api.routers import zona_router  # <-- AGREGADO: Importación del router de Zonas (HU-036)
+from app.api.routers import logistica_router
 from app.api.router import router as products_router
 from app.api.parametrics_router import router as parametrics_router
+from app.api.endpoints.direccion import router as direccion_router
 
 app = FastAPI(
     title="SpaNails API",
@@ -19,8 +23,16 @@ app.include_router(admin_router.router)
 app.include_router(auth_router.router)
 app.include_router(catalogo_router.router)
 app.include_router(zona_router.router)   # <-- AGREGADO: Registro del router de Zonas (HU-036)
+app.include_router(logistica_router.router)
+app.include_router(direccion_router)
 app.include_router(products_router)
 app.include_router(parametrics_router)
+
+
+@app.on_event("startup")
+def crear_tabla_direcciones_si_no_existe():
+    # Las demás tablas se gestionan por migraciones; esta tabla aún no tiene una.
+    Direccion.__table__.create(bind=engine, checkfirst=True)
 
 
 @app.get("/")

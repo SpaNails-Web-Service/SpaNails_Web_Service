@@ -18,7 +18,8 @@ class ZonaService:
         nueva_zona = Zona(
             id_zona=0,
             nombre_zona=datos.nombre_zona.strip(),
-            estado="Activo"
+            estado="Activo",
+            tarifa_domicilio=datos.tarifa_domicilio,
         )
         
         return self.repository.save_zona(nueva_zona)

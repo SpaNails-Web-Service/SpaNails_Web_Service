@@ -6,7 +6,7 @@ class ZonaRepository:
     
     # Base de datos pre-cargada para probar la HU-038
     _db: List[Zona] = [
-        Zona(id_zona=5, nombre_zona="Cabecera", estado="Activo"),
+        Zona(id_zona=5, nombre_zona="Cabecera", estado="Activo", tarifa_domicilio=8000),
         Zona(id_zona=6, nombre_zona="Provenza", estado="Inactivo")
     ]
     _current_id: int = 6

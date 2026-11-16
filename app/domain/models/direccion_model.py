@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String
-from app.repositories.database import Base 
+from database import Base
 
 class Direccion(Base):
     __tablename__ = "direcciones"

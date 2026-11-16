@@ -21,4 +21,10 @@ class AuthRepository:
                 return user
         return None
 
+    def find_user_by_id(self, user_id: int) -> Optional[UsuarioAuth]:
+        for user in self._db:
+            if user.id_usuario == user_id:
+                return user
+        return None
+
 auth_repository = AuthRepository()

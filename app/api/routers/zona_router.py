@@ -67,7 +67,12 @@ def registrar_zona(
         zona_creada = zona_service.crear_zona(payload, x_rol_usuario)
         return ZonaResponse(
             message="Zona de cobertura creada exitosamente",
-            data=ZonaDataResponse(id_zona=zona_creada.id_zona, nombre_zona=zona_creada.nombre_zona, estado=zona_creada.estado),
+            data=ZonaDataResponse(
+                id_zona=zona_creada.id_zona,
+                nombre_zona=zona_creada.nombre_zona,
+                estado=zona_creada.estado,
+                tarifa_domicilio=zona_creada.tarifa_domicilio,
+            ),
             success=True
         )
     except FileExistsError as e:

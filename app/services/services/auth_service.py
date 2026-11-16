@@ -33,4 +33,26 @@ class AuthService:
             rol=usuario.rol
         )
 
+    def validar_token_simulado(self, token: str):
+        """Valida el token de demostración emitido por este servicio."""
+        partes = token.rsplit(".", 2)
+        if len(partes) != 3:
+            raise ValueError("Token inválido")
+
+        try:
+            user_id = int(partes[1])
+        except ValueError as exc:
+            raise ValueError("Token inválido") from exc
+
+        usuario = self.repository.find_user_by_id(user_id)
+        if (
+            usuario is None
+            or not usuario.activo
+            or usuario.rol != partes[2]
+            or token != self._generar_jwt(usuario.id_usuario, usuario.rol)
+        ):
+            raise ValueError("Token inválido o usuario inactivo")
+
+        return usuario
+
 auth_service = AuthService()
