@@ -155,6 +155,39 @@ class ReservaService:
             )
             return reserva_repository.crear(db, reserva)
 
+    def listar_citas_futuras(self, db: Session, cliente_id: int) -> list[dict]:
+        ahora = datetime.now(ZONA_HORARIA_NEGOCIO)
+        reservas = reserva_repository.listar_futuras_cliente(
+            db, cliente_id, ahora.date()
+        )
+        citas = []
+        for reserva in reservas:
+            inicio = datetime.combine(
+                reserva.fecha,
+                datetime.strptime(reserva.hora_inicio, "%H:%M").time(),
+                tzinfo=ZONA_HORARIA_NEGOCIO,
+            )
+            if inicio <= ahora:
+                continue
+
+            nombres_servicios = [
+                item.get("nombre", "")
+                for item in (reserva.servicios_detalle or [])
+                if item.get("nombre")
+            ]
+            citas.append(
+                {
+                    "id_reserva": reserva.id_reserva,
+                    "fecha_inicio": inicio.replace(tzinfo=None).isoformat(),
+                    "servicio": ", ".join(nombres_servicios)
+                    or "Servicio no especificado",
+                    # La reserva aún no almacena la asignación de manicurista.
+                    "manicurista": None,
+                    "estado": reserva.estado,
+                }
+            )
+        return citas
+
     def confirmar(self, db: Session, id_reserva: int) -> Reserva:
         reserva = reserva_repository.obtener_por_id(db, id_reserva)
         if reserva is None:
