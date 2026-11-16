@@ -106,7 +106,7 @@ class DisponibilidadService:
         bloque_minutos = servicio.duracion_minutos + TIEMPO_ADICIONAL_MINUTOS
         ventanas = HORARIO_SEMANAL[fecha.weekday()]
         bloqueos = agenda_repository.obtener_bloques_ocupados(
-            fecha, modalidad_normalizada
+            db, fecha, modalidad_normalizada
         )
         horarios = []
         intervalo = timedelta(minutes=INTERVALO_INICIOS_MINUTOS)
@@ -118,11 +118,9 @@ class DisponibilidadService:
             limite = datetime.combine(fecha, cierre)
             while inicio + bloque <= limite:
                 fin_bloqueo = inicio + bloque
-                ocupado = any(
-                    inicio.time() < fin_ocupado and fin_bloqueo.time() > inicio_ocupado
-                    for inicio_ocupado, fin_ocupado in bloqueos
-                )
-                if not ocupado:
+                if self._bloque_libre(
+                    inicio.time(), fin_bloqueo.time(), bloqueos
+                ):
                     horarios.append(
                         {
                             "hora_inicio": inicio.strftime("%H:%M"),
@@ -146,6 +144,45 @@ class DisponibilidadService:
             },
             "success": True,
         }
+
+    def esta_disponible(
+        self,
+        db: Session,
+        fecha: date,
+        hora_inicio: time,
+        duracion_servicios_minutos: int,
+        modalidad: str,
+    ) -> bool:
+        modalidad_normalizada = self._normalizar_modalidad(modalidad)
+        inicio = datetime.combine(fecha, hora_inicio)
+        fin_bloqueo = inicio + timedelta(
+            minutes=duracion_servicios_minutos + TIEMPO_ADICIONAL_MINUTOS
+        )
+        if fin_bloqueo.date() != fecha:
+            return False
+
+        cabe_en_jornada = any(
+            inicio.time() >= apertura and fin_bloqueo.time() <= cierre
+            for apertura, cierre in HORARIO_SEMANAL[fecha.weekday()]
+        )
+        if not cabe_en_jornada:
+            return False
+
+        bloqueos = agenda_repository.obtener_bloques_ocupados(
+            db, fecha, modalidad_normalizada
+        )
+        return self._bloque_libre(inicio.time(), fin_bloqueo.time(), bloqueos)
+
+    @staticmethod
+    def _bloque_libre(
+        inicio: time,
+        fin: time,
+        bloqueos: list[tuple[time, time]],
+    ) -> bool:
+        return not any(
+            inicio < fin_ocupado and fin > inicio_ocupado
+            for inicio_ocupado, fin_ocupado in bloqueos
+        )
 
 
 disponibilidad_service = DisponibilidadService()
