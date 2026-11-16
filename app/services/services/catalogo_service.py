@@ -28,6 +28,9 @@ class CatalogoService:
     def obtener_catalogo(self) -> List[Servicio]:
         return self.repository.get_servicios_activos()
 
+    def obtener_servicio(self, id_servicio: int) -> Servicio | None:
+        return self.repository.find_servicio_by_id(id_servicio)
+
     # --- HU-031: Habilitar Domicilio ---
     def actualizar_modalidad(self, id_servicio: int, datos: ModalidadUpdate, rol_usuario: str) -> Servicio:
         # Validación de permisos (Caso 4)
