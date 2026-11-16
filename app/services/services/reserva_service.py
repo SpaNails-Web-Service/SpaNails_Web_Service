@@ -42,6 +42,14 @@ class HorarioNoDisponibleError(Exception):
     pass
 
 
+class ReservaNoEncontradaError(Exception):
+    pass
+
+
+class EstadoReservaNoConfirmableError(Exception):
+    pass
+
+
 class ReservaService:
     def __init__(self):
         # Serializa el check + insert dentro de este proceso para evitar carreras locales.
@@ -138,6 +146,26 @@ class ReservaService:
                 estado="Pendiente",
             )
             return reserva_repository.crear(db, reserva)
+
+    def confirmar(self, db: Session, id_reserva: int) -> Reserva:
+        reserva = reserva_repository.obtener_por_id(db, id_reserva)
+        if reserva is None:
+            raise ReservaNoEncontradaError("Reserva no encontrada")
+
+        estado_actual = (reserva.estado or "").strip().casefold()
+        if estado_actual == "cancelada":
+            raise EstadoReservaNoConfirmableError(
+                "No se puede confirmar una reserva que ha sido cancelada"
+            )
+        if estado_actual != "pendiente":
+            raise EstadoReservaNoConfirmableError(
+                f"No se puede confirmar una reserva en estado '{reserva.estado}'"
+            )
+
+        reserva.estado = "Confirmada"
+        db.commit()
+        db.refresh(reserva)
+        return reserva
 
 
 reserva_service = ReservaService()

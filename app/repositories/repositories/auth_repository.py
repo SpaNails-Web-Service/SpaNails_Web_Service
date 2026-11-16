@@ -7,7 +7,8 @@ class AuthRepository:
     # Base de datos simulada para validación de Login
     _db = [
         UsuarioAuth(id_usuario=105, email="cliente@correo.com", password_hash="hashed_secreta123_2026", rol="Cliente", activo=True),
-        UsuarioAuth(id_usuario=3, email="admin@spa.com", password_hash="hashed_admin123_2026", rol="Recepcionista", activo=False)
+        UsuarioAuth(id_usuario=3, email="admin@spa.com", password_hash="hashed_admin123_2026", rol="Recepcionista", activo=False),
+        UsuarioAuth(id_usuario=4, email="administrador@spa.com", password_hash="hashed_admin123_2026", rol="Administrador", activo=True),
     ]
 
     def __new__(cls):
