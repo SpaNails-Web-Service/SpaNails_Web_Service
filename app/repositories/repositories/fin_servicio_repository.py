@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.domain.models.viaje_model import Viaje
+from app.domain.models.fin_servicio_model import Viaje
 
 class ViajeRepository:
     def find_by_id(self, db: Session, id_viaje: int) -> Viaje | None:

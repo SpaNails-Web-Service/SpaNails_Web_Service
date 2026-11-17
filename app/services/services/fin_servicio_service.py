@@ -1,7 +1,7 @@
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from app.api.schemas.fin_servicio_schemea import ViajeFinalizarCreate
+from app.api.schemas.fin_servicio_schema import ViajeFinalizarCreate
 from app.repositories.repositories.fin_servicio_repository import ViajeRepository
 
 class ViajeService:

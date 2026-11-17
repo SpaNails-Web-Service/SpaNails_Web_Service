@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.api.schemas.direccion_schema import DireccionCreate, DireccionResponse 
-from app.services.direccion_service import direccion_service
-from app.repositories.database import get_db
+from app.services.services.direccion_service import direccion_service
+from database import get_db
 
 # Definimos el prefijo general para las rutas de direcciones de usuarios
 router = APIRouter(prefix="/api/v1/usuarios", tags=["Direcciones"])

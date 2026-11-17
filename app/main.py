@@ -7,9 +7,8 @@ from app.api.routers import cliente_router
 from app.api.routers import admin_router
 from app.api.routers import auth_router
 from app.api.routers import catalogo_router
-from app.api.routers import zona_router  
+from app.api.routers import zona_router
 from app.api.routers import logistica_router
-from app.api.routers import fin_servicio_router
 from app.api.routers import citas_router
 from app.api.routers import agenda_router
 from app.api.routers import reservas_router
@@ -17,6 +16,7 @@ from app.api.routers import confirmacion_router
 from app.api.routers import cancelacion_router
 from app.api.routers import citas_futuras_router
 from app.api.routers import direccion_router
+from app.api.routers import empleado_citas_router
 from app.api.router import router as products_router
 from app.api.parametrics_router import router as parametrics_router
 
@@ -26,11 +26,12 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Registro de Routers
 app.include_router(cliente_router.router)
 app.include_router(admin_router.router)
 app.include_router(auth_router.router)
 app.include_router(catalogo_router.router)
-app.include_router(zona_router.router) 
+app.include_router(zona_router.router)
 app.include_router(logistica_router.router)
 app.include_router(citas_router.router)
 app.include_router(agenda_router.router)
@@ -39,23 +40,6 @@ app.include_router(confirmacion_router.router)
 app.include_router(cancelacion_router.router)
 app.include_router(citas_futuras_router.router)
 app.include_router(direccion_router.router)
+app.include_router(empleado_citas_router.router)
 app.include_router(products_router)
 app.include_router(parametrics_router)
-app.include_router(fin_servicio_router.router)
-
-
-@app.on_event("startup")
-def crear_tabla_direcciones_si_no_existe():
-    # Las tablas de direcciones y reservas aún no tienen migraciones propias.
-    Direccion.__table__.create(bind=engine, checkfirst=True)
-    Reserva.__table__.create(bind=engine, checkfirst=True)
-
-
-@app.get("/")
-def root():
-    return {"message": "SpaNails API funcionando"}
-
-
-@app.get("/health")
-def health():
-    return {"status": "ok", "version": "1.0.0"}

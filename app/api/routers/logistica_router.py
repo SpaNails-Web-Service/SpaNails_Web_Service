@@ -22,7 +22,7 @@ from app.services.services.domicilio_service import (
 )
 
 # Tu servicio y repositorio de viajes para la HU-048
-from app.services.fin_servicio_service import ViajeService
+from app.services.services.fin_servicio_service import ViajeService
 from app.repositories.repositories.fin_servicio_repository import ViajeRepository
 from database import get_db
 

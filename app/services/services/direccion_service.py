@@ -2,15 +2,14 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 
-from app.api.schemas.Direccion_schema import DireccionCreate 
 from app.repositories.repositories.direccion_repository import direccion_repository
+from app.api.schemas.direccion_schema import DireccionCreate
 
 class DireccionService:
     def __init__(self):
         self.repository = direccion_repository
 
     def crear_direccion(self, db: Session, usuario_id: int, direccion_in: DireccionCreate):
-
         if not self.repository.check_municipio_exists(db, direccion_in.municipio_id):
             raise HTTPException(
                 status_code=400,
