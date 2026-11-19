@@ -1,0 +1,240 @@
+from datetime import datetime, timedelta, timezone
+from threading import RLock
+
+from sqlalchemy.orm import Session
+
+from app.api.schemas.reserva_schema import ReservaCreate
+from app.domain.models.reserva_model import Reserva
+from app.repositories.repositories.reserva_repository import reserva_repository
+from app.services.services.catalogo_service import catalogo_service
+from app.services.services.cita_tiempo_service import TIEMPO_ADICIONAL_MINUTOS
+from app.services.services.domicilio_service import (
+    DireccionNoEncontradaError,
+    FueraDeCoberturaError,
+    TarifaNoConfiguradaError,
+    domicilio_service,
+)
+from app.services.services.disponibilidad_service import (
+    disponibilidad_service,
+)
+
+
+ZONA_HORARIA_NEGOCIO = timezone(timedelta(hours=-5))
+
+
+class ServicioReservaNoEncontradoError(Exception):
+    pass
+
+
+class ServicioReservaNoDisponibleError(Exception):
+    pass
+
+
+class ModalidadReservaNoDisponibleError(Exception):
+    pass
+
+
+class FechaReservaInvalidaError(Exception):
+    pass
+
+
+class HorarioNoDisponibleError(Exception):
+    pass
+
+
+class ReservaNoEncontradaError(Exception):
+    pass
+
+
+class EstadoReservaNoConfirmableError(Exception):
+    pass
+
+
+class ReservaNoAutorizadaError(Exception):
+    pass
+
+
+class EstadoReservaNoCancelableError(Exception):
+    pass
+
+
+class ReservaService:
+    def __init__(self):
+        # Serializa el check + insert dentro de este proceso para evitar carreras locales.
+        self._lock = RLock()
+
+    def crear(self, db: Session, cliente_id: int, solicitud: ReservaCreate) -> Reserva:
+        inicio = datetime.combine(
+            solicitud.fecha,
+            solicitud.hora_inicio,
+            tzinfo=ZONA_HORARIA_NEGOCIO,
+        )
+        if solicitud.fecha <= datetime.now(ZONA_HORARIA_NEGOCIO).date() or inicio <= datetime.now(ZONA_HORARIA_NEGOCIO):
+            raise FechaReservaInvalidaError("La fecha y hora de la reserva deben ser futuras")
+
+        servicios = []
+        subtotal = 0.0
+        duracion_total = 0
+        for seleccionado in solicitud.servicios:
+            servicio = catalogo_service.obtener_servicio(seleccionado.id_servicio)
+            if servicio is None:
+                raise ServicioReservaNoEncontradoError(
+                    f"No existe el servicio con ID {seleccionado.id_servicio}"
+                )
+            if servicio.estado.strip().lower() != "activo":
+                raise ServicioReservaNoDisponibleError(
+                    f"El servicio '{servicio.nombre}' no está activo"
+                )
+            if (
+                not isinstance(servicio.duracion_minutos, int)
+                or servicio.duracion_minutos <= 0
+                or servicio.precio is None
+                or servicio.precio < 0
+            ):
+                raise ServicioReservaNoDisponibleError(
+                    f"El servicio '{servicio.nombre}' no tiene precio o duración válida"
+                )
+            if solicitud.modalidad == "A domicilio" and not servicio.aplica_domicilio:
+                raise ModalidadReservaNoDisponibleError(
+                    f"El servicio '{servicio.nombre}' no está habilitado para domicilio"
+                )
+
+            precio = round(float(servicio.precio), 2)
+            subtotal += precio
+            duracion_total += servicio.duracion_minutos
+            servicios.append(
+                {
+                    "id_servicio": servicio.id_servicio,
+                    "nombre": servicio.nombre,
+                    "precio": precio,
+                    "duracion_minutos": servicio.duracion_minutos,
+                }
+            )
+
+        costo_domicilio = 0
+        if solicitud.modalidad == "A domicilio":
+            if solicitud.id_direccion is None:
+                raise ValueError("Debe seleccionar una dirección para la atención a domicilio")
+            costo_domicilio = domicilio_service.calcular_costo(
+                db, cliente_id, solicitud.id_direccion
+            )["costo_domicilio"]
+        elif solicitud.id_direccion is not None:
+            raise ValueError("No envíe una dirección cuando la modalidad es en el spa")
+
+        with self._lock:
+            if not disponibilidad_service.esta_disponible(
+                db,
+                solicitud.fecha,
+                solicitud.hora_inicio,
+                duracion_total,
+                solicitud.modalidad,
+            ):
+                raise HorarioNoDisponibleError(
+                    "El horario seleccionado ya no está disponible"
+                )
+
+            fin_servicio = inicio + timedelta(minutes=duracion_total)
+            fin_bloqueo = fin_servicio + timedelta(
+                minutes=TIEMPO_ADICIONAL_MINUTOS
+            )
+            subtotal = round(subtotal, 2)
+            reserva = Reserva(
+                cliente_id=cliente_id,
+                fecha=solicitud.fecha,
+                hora_inicio=solicitud.hora_inicio.strftime("%H:%M"),
+                hora_fin_servicio=fin_servicio.strftime("%H:%M"),
+                hora_fin_bloqueo=fin_bloqueo.strftime("%H:%M"),
+                modalidad=solicitud.modalidad,
+                id_direccion=solicitud.id_direccion,
+                servicios_detalle=servicios,
+                subtotal=subtotal,
+                costo_domicilio=costo_domicilio,
+                total=round(subtotal + costo_domicilio, 2),
+                moneda="COP",
+                estado="Pendiente",
+            )
+            return reserva_repository.crear(db, reserva)
+
+    def listar_citas_futuras(self, db: Session, cliente_id: int) -> list[dict]:
+        ahora = datetime.now(ZONA_HORARIA_NEGOCIO)
+        reservas = reserva_repository.listar_futuras_cliente(
+            db, cliente_id, ahora.date()
+        )
+        citas = []
+        for reserva in reservas:
+            inicio = datetime.combine(
+                reserva.fecha,
+                datetime.strptime(reserva.hora_inicio, "%H:%M").time(),
+                tzinfo=ZONA_HORARIA_NEGOCIO,
+            )
+            if inicio <= ahora:
+                continue
+
+            nombres_servicios = [
+                item.get("nombre", "")
+                for item in (reserva.servicios_detalle or [])
+                if item.get("nombre")
+            ]
+            citas.append(
+                {
+                    "id_reserva": reserva.id_reserva,
+                    "fecha_inicio": inicio.replace(tzinfo=None).isoformat(),
+                    "servicio": ", ".join(nombres_servicios)
+                    or "Servicio no especificado",
+                    # La reserva aún no almacena la asignación de manicurista.
+                    "manicurista": None,
+                    "estado": reserva.estado,
+                }
+            )
+        return citas
+
+    def confirmar(self, db: Session, id_reserva: int) -> Reserva:
+        reserva = reserva_repository.obtener_por_id(db, id_reserva)
+        if reserva is None:
+            raise ReservaNoEncontradaError("Reserva no encontrada")
+
+        estado_actual = (reserva.estado or "").strip().casefold()
+        if estado_actual == "cancelada":
+            raise EstadoReservaNoConfirmableError(
+                "No se puede confirmar una reserva que ha sido cancelada"
+            )
+        if estado_actual != "pendiente":
+            raise EstadoReservaNoConfirmableError(
+                f"No se puede confirmar una reserva en estado '{reserva.estado}'"
+            )
+
+        reserva.estado = "Confirmada"
+        db.commit()
+        db.refresh(reserva)
+        return reserva
+
+    def cancelar(self, db: Session, id_reserva: int, cliente_id: int) -> tuple[Reserva, bool]:
+        with self._lock:
+            reserva = reserva_repository.obtener_por_id(db, id_reserva)
+            if reserva is None:
+                raise ReservaNoEncontradaError("Reserva no encontrada")
+            if reserva.cliente_id != cliente_id:
+                raise ReservaNoAutorizadaError(
+                    "No tiene permisos para modificar esta reserva"
+                )
+
+            estado_actual = (reserva.estado or "").strip().casefold()
+            inicio = datetime.combine(
+                reserva.fecha,
+                datetime.strptime(reserva.hora_inicio, "%H:%M").time(),
+                tzinfo=ZONA_HORARIA_NEGOCIO,
+            )
+            ahora = datetime.now(ZONA_HORARIA_NEGOCIO)
+            if estado_actual not in {"pendiente", "confirmada"} or inicio <= ahora:
+                raise EstadoReservaNoCancelableError(
+                    "La cita seleccionada no puede ser anulada en su estado actual"
+                )
+
+            penalidad = inicio - ahora < timedelta(hours=24)
+            reserva.estado = "Cancelada"
+            db.commit()
+            db.refresh(reserva)
+            return reserva, penalidad
+
+
+reserva_service = ReservaService()
