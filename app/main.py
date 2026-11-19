@@ -16,6 +16,7 @@ from app.api.routers import confirmacion_router
 from app.api.routers import notificacion_router
 from app.api.routers import resena_promedio_router
 from app.api.routers import alerta_cancelacion_router
+from app.api.routers import alerta_logistica_router
 from app.api.routers import cancelacion_router
 from app.api.routers import citas_futuras_router
 from app.api.routers import direccion_router
@@ -43,6 +44,7 @@ app.include_router(confirmacion_router.router)
 app.include_router(notificacion_router.router)
 app.include_router(resena_promedio_router.router)
 app.include_router(alerta_cancelacion_router.router)
+app.include_router(alerta_logistica_router.router)
 app.include_router(cancelacion_router.router)
 app.include_router(citas_futuras_router.router)
 app.include_router(direccion_router.router)
