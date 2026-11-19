@@ -13,6 +13,8 @@ from app.api.routers import citas_router
 from app.api.routers import agenda_router
 from app.api.routers import reservas_router
 from app.api.routers import confirmacion_router
+from app.api.routers import notificacion_router
+from app.api.routers import resena_promedio_router
 from app.api.routers import cancelacion_router
 from app.api.routers import citas_futuras_router
 from app.api.routers import direccion_router
@@ -37,6 +39,8 @@ app.include_router(citas_router.router)
 app.include_router(agenda_router.router)
 app.include_router(reservas_router.router)
 app.include_router(confirmacion_router.router)
+app.include_router(notificacion_router.router)
+app.include_router(resena_promedio_router.router)
 app.include_router(cancelacion_router.router)
 app.include_router(citas_futuras_router.router)
 app.include_router(direccion_router.router)
