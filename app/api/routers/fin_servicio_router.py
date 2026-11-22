@@ -3,8 +3,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.api.schemas.fin_servicio_schemea import ViajeFinalizarCreate, ViajeRespuesta
-from app.services.fin_servicio_service import ViajeService
+from app.api.schemas.fin_servicio_schema import ViajeFinalizarCreate, ViajeRespuesta
+from app.services.services.fin_servicio_service import ViajeService
 from app.repositories.repositories.fin_servicio_repository import ViajeRepository
 from database import get_db
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import Optional
-from app.api.dependencies import get_db # Dependencia de tu base de datos
+from database import get_db
 from app.api.schemas.resena_promedio_schema import ResenaPromedioResponse
 from app.services.services.resena_promedio_service import ResenaPromedioService
 from datetime import datetime

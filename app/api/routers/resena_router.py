@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
-from app.repositories.database import get_db
+from database import get_db
 from app.api.schemas.resena_schema import ResenaCreate, ResenaResponse
 from app.repositories.repositories.resena_repository import ResenaRepository
 from app.services.services.resena_service import ResenaService

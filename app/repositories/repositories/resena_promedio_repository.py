@@ -1,19 +1,19 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from fastapi import HTTPException, status
-from app.domain.models.resena_model import ResenaModel 
+from app.domain.models.resena_model import Resena
 
 class ResenaPromedioRepository:
     @staticmethod
     def obtener_datos_promedio(db: Session):
         try:
             # Consultamos el total de reseñas y el promedio de la columna calificacion
-            total_resenas = db.query(func.count(ResenaModel.id)).scalar() or 0
+            total_resenas = db.query(func.count(Resena.id)).scalar() or 0
             
             if total_resenas == 0:
                 return 0.0, 0
                 
-            promedio = db.query(func.avg(ResenaModel.calificacion)).scalar() or 0.0
+            promedio = db.query(func.avg(Resena.calificacion)).scalar() or 0.0
             
             return float(promedio), int(total_resenas)
         except Exception as e:
